@@ -1,19 +1,24 @@
-package com.example.sensor_monitor.domain.entities;
+package com.example.sensor_monitor.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.Date;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SensorData {
+@Document(collection = "sensorAlert")
+public class SensorAlert {
     public Integer id;
     public String state;
     public Double temperature;
     public Double temperatureLimit;
-    public Double umidade;
-    public Double umidadeLimit;
+    public Double humidity;
+    public Double humidityLimit;
+    public Date alertDate;
 }

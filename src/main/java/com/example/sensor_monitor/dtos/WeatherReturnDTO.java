@@ -1,4 +1,4 @@
-package com.example.sensor_monitor.application.dtos;
+package com.example.sensor_monitor.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

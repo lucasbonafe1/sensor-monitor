@@ -1,6 +1,6 @@
-package com.example.sensor_monitor.domain.services;
+package com.example.sensor_monitor.services;
 
-import com.example.sensor_monitor.application.dtos.WeatherReturnDTO;
+import com.example.sensor_monitor.dtos.WeatherReturnDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +25,12 @@ public class WeatherApiExternalService {
     @Autowired
     public ObjectMapper mapper;
 
+    protected String getApiKey() {
+        return System.getenv("weather.api.key");
+    }
+
     public WeatherReturnDTO findByLocation(String location) {
-        var key = System.getenv("weather.api.key");
+        var key = getApiKey();
 
         try {
             String url = baseUrl + "/current.json?q=" + URLEncoder.encode(location, StandardCharsets.UTF_8)

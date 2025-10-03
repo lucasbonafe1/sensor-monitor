@@ -1,6 +1,7 @@
 package com.example.sensor_monitor.controllers;
 
 import com.example.sensor_monitor.dtos.SensorDataDTO;
+import com.example.sensor_monitor.entities.SensorAlert;
 import com.example.sensor_monitor.services.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,7 @@ public class SensorAlertController {
     private SensorDataService sensorDataService;
 
     @PostMapping
-    public void save(@RequestBody SensorDataDTO usuario) {
-        sensorDataService.verifyAndSaveAlert(usuario);
+    public SensorAlert save(@RequestBody SensorDataDTO user) {
+        return sensorDataService.verifyAndSaveAlert(user);
     }
 }

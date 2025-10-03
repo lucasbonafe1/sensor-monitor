@@ -1,7 +1,30 @@
 services:
+  sensor-mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  sensor-api:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      spring.data.mongodb.uri: mongodb://sensor-mongodb:27017/sensor
+      weather.api.key: ${WEATHER_API_KEY}
+      weather.api.url: https://api.weatherapi.com/v1
+    depends_on:
+      - sensor-mongodb
+      - kafka
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
+    restart: on-failure
     ports:
       - "2181:2181"
     environment:
@@ -11,6 +34,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
+    restart: on-failure
     ports:
       - "9092:9092"
     environment:
@@ -21,3 +45,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+
+volumes:
+  mongodb_data:

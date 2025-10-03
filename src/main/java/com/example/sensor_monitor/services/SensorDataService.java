@@ -6,9 +6,11 @@ import com.example.sensor_monitor.dtos.WeatherReturnDTO;
 import com.example.sensor_monitor.entities.SensorAlert;
 import com.example.sensor_monitor.repositories.SensorDataRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.Console;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -24,35 +26,30 @@ public class SensorDataService {
     @Autowired
     public KafkaProducerService kafkaProducerService;
 
-    @Autowired
-    public ObjectMapper mapper;
+    public SensorAlert verifyAndSaveAlert(SensorDataDTO dto){
+        SensorAlert savedAlert = new SensorAlert();
+        savedAlert.setState(dto.state);
 
-    public void verifyAndSaveAlert(SensorDataDTO sensorDataDTO){
-        var sensorExistent = sensorDataRepository.findAll().
-                stream().filter(f -> Objects.equals(f.state, sensorDataDTO.state))
-                .findFirst().orElse(null);
+        try {
+            SensorAlert sensorExistent = sensorDataRepository.findFirstByState(dto.state);
+            CurrentDTO temperatureResponse = verifyIfTemperatureIsOverLimit(dto);
 
-        var temperatureResponse = verifyIfTemperatureIsOverLimit(sensorDataDTO);
+            if (temperatureResponse != null){
+                savedAlert.setCurrentTemperature(temperatureResponse.temp_c, dto.temperatureLimit,
+                            temperatureResponse.humidity, dto.humidityLimit);
 
-        if (temperatureResponse != null){
-            if (sensorExistent != null){
-                sensorExistent.temperature = temperatureResponse.temp_c;
-                sensorExistent.humidity = temperatureResponse.humidity;
-                sensorExistent.humidityLimit = sensorDataDTO.humidityLimit;
-                sensorExistent.temperatureLimit = sensorDataDTO.temperatureLimit;
+                if (sensorExistent != null)
+                    savedAlert.setId(sensorExistent.id);
 
-                sensorDataRepository.save(sensorExistent);
-            } else {
-                SensorAlert sensorData = mapper.convertValue(sensorDataDTO, SensorAlert.class);
-                sensorData.temperature = temperatureResponse.temp_c;
-                sensorData.humidity = temperatureResponse.humidity;
-                sensorData.alertDate = LocalDateTime.now();
-
-                sensorDataRepository.save(sensorData);
+                sensorDataRepository.save(savedAlert);
+                kafkaProducerService.sendMessageOrder(dto);
             }
-
-            kafkaProducerService.sendMessageOrder(sensorDataDTO);
+            System.out.println("Alerta processado para a localidade: )" + dto.getState());
+        } catch (Exception e){
+            System.out.println("Erro ao salvar/atualizar alerta para a localidade: " + dto.getState() +"\n"+ e);
         }
+
+        return savedAlert;
     }
 
     protected CurrentDTO verifyIfTemperatureIsOverLimit(SensorDataDTO sensorData)
@@ -60,9 +57,8 @@ public class SensorDataService {
         WeatherReturnDTO response = weatherApiExternalService.findByLocation(sensorData.state);
         CurrentDTO currentTemp = response.getCurrent();
 
-        if(currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit){
+        if(currentTemp != null && (currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit))
             return currentTemp;
-        }
 
         return null;
     }

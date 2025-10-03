@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 @Service
@@ -20,6 +22,9 @@ public class SensorDataService {
     public SensorDataRepository sensorDataRepository;
 
     @Autowired
+    public KafkaProducerService kafkaProducerService;
+
+    @Autowired
     public ObjectMapper mapper;
 
     public void verifyAndSaveAlert(SensorDataDTO sensorDataDTO){
@@ -27,25 +32,38 @@ public class SensorDataService {
                 stream().filter(f -> Objects.equals(f.state, sensorDataDTO.state))
                 .findFirst().orElse(null);
 
-        if (verifyIfTemperatureIsOverLimit(sensorDataDTO)){
+        var temperatureResponse = verifyIfTemperatureIsOverLimit(sensorDataDTO);
+
+        if (temperatureResponse != null){
             if (sensorExistent != null){
+                sensorExistent.temperature = temperatureResponse.temp_c;
+                sensorExistent.humidity = temperatureResponse.humidity;
                 sensorExistent.humidityLimit = sensorDataDTO.humidityLimit;
                 sensorExistent.temperatureLimit = sensorDataDTO.temperatureLimit;
 
                 sensorDataRepository.save(sensorExistent);
             } else {
                 SensorAlert sensorData = mapper.convertValue(sensorDataDTO, SensorAlert.class);
+                sensorData.temperature = temperatureResponse.temp_c;
+                sensorData.humidity = temperatureResponse.humidity;
+                sensorData.alertDate = LocalDateTime.now();
 
                 sensorDataRepository.save(sensorData);
             }
+
+            kafkaProducerService.sendMessageOrder(sensorDataDTO);
         }
     }
 
-    protected boolean verifyIfTemperatureIsOverLimit(SensorDataDTO sensorData)
+    protected CurrentDTO verifyIfTemperatureIsOverLimit(SensorDataDTO sensorData)
     {
         WeatherReturnDTO response = weatherApiExternalService.findByLocation(sensorData.state);
         CurrentDTO currentTemp = response.getCurrent();
 
-        return currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit;
+        if(currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit){
+            return currentTemp;
+        }
+
+        return null;
     }
 }

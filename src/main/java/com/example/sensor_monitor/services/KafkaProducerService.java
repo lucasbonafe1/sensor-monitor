@@ -6,7 +6,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class KafkaService {
+public class KafkaProducerService {
     @Autowired
     private KafkaTemplate<String, SensorDataDTO> kafkaTemplateOrder;
 
@@ -14,7 +14,7 @@ public class KafkaService {
     public void sendMessageOrder(SensorDataDTO order) {
         int partition = 1;
         System.out.println("Sent message to partition: " + partition);
-        System.out.println("Sending Order: " + order.state);
+        System.out.println("Sending Sensor Alert from: " + order.state);
 
         kafkaTemplateOrder.send("sensor-order-processed",partition, null, order);
     }

@@ -2,19 +2,21 @@ package com.example.sensor_monitor.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class CurrentDTO {
-    public double temp_c;
+    public Double temp_c;
     public ConditionDTO condition;
-    public double wind_mph;
-    public int humidity;
-    public double feelslike_c;
-    public double vis_km;
-    public double vis_miles;
-    public double gust_mph;
-    public double gust_kph;
+    public Double wind_mph;
+    public Double humidity;
+    public Double feelslike_c;
+    public Double vis_km;
+    public Double vis_miles;
+    public Double gust_mph;
+    public Double gust_kph;
 }

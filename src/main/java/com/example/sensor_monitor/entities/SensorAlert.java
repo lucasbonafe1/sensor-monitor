@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -20,5 +22,5 @@ public class SensorAlert {
     public Double temperatureLimit;
     public Double humidity;
     public Double humidityLimit;
-    public Date alertDate;
+    public LocalDateTime alertDate;
 }

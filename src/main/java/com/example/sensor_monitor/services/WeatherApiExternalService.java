@@ -19,22 +19,19 @@ public class WeatherApiExternalService {
     @Value("${weather.api.url}")
     private String baseUrl;
 
+    @Value("${weather.api.key}")
+    private String apiKey;
+
     @Autowired
     public HttpClient client;
 
     @Autowired
     public ObjectMapper mapper;
 
-    protected String getApiKey() {
-        return System.getenv("weather.api.key");
-    }
-
     public WeatherReturnDTO findByLocation(String location) {
-        var key = getApiKey();
-
         try {
             String url = baseUrl + "/current.json?q=" + URLEncoder.encode(location, StandardCharsets.UTF_8)
-                            + "&key=" + key;
+                            + "&key=" + apiKey;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -47,7 +44,9 @@ public class WeatherApiExternalService {
             if (response.statusCode() == 404)
                 throw new NoSuchElementException("Local não encontrado.");
 
-            return mapper.convertValue(response, WeatherReturnDTO.class);
+            WeatherReturnDTO dtoMapped = mapper.readValue(response.body(), WeatherReturnDTO.class);
+
+            return dtoMapped;
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar dados meteorológicos da localidade " + location, e);
         }

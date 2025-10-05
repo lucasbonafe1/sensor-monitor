@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.Console;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -28,7 +29,7 @@ public class SensorDataService {
 
     public SensorAlert verifyAndSaveAlert(SensorDataDTO dto){
         SensorAlert savedAlert = new SensorAlert();
-        savedAlert.setState(dto.state);
+        savedAlert.state = dto.state;
 
         try {
             SensorAlert sensorExistent = sensorDataRepository.findFirstByState(dto.state);
@@ -39,14 +40,14 @@ public class SensorDataService {
                             temperatureResponse.humidity, dto.humidityLimit);
 
                 if (sensorExistent != null)
-                    savedAlert.setId(sensorExistent.id);
+                    savedAlert.id = sensorExistent.id;
 
                 sensorDataRepository.save(savedAlert);
                 kafkaProducerService.sendMessageOrder(dto);
             }
-            System.out.println("Alerta processado para a localidade: )" + dto.getState());
+            System.out.println("Alerta processado para a localidade: )" + dto.state);
         } catch (Exception e){
-            System.out.println("Erro ao salvar/atualizar alerta para a localidade: " + dto.getState() +"\n"+ e);
+            System.out.println("Erro ao salvar/atualizar alerta para a localidade: " + dto.state +"\n"+ e);
         }
 
         return savedAlert;
@@ -55,11 +56,19 @@ public class SensorDataService {
     protected CurrentDTO verifyIfTemperatureIsOverLimit(SensorDataDTO sensorData)
     {
         WeatherReturnDTO response = weatherApiExternalService.findByLocation(sensorData.state);
-        CurrentDTO currentTemp = response.getCurrent();
+        CurrentDTO currentTemp = response.current;
 
         if(currentTemp != null && (currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit))
             return currentTemp;
 
         return null;
+    }
+
+    public List<SensorAlert> findAll(){
+        return sensorDataRepository.findAll();
+    }
+
+    public SensorAlert findByState(String state){
+        return sensorDataRepository.findFirstByState(state);
     }
 }

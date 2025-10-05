@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WeatherReturnDTO {
-    private LocationDTO location;
-    private CurrentDTO current;
+    public LocationDTO location;
+    public CurrentDTO current;
 }
 

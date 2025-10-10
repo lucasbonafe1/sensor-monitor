@@ -25,8 +25,8 @@ public class SensorAlertController {
         return sensorDataService.findAll();
     }
 
-    @GetMapping
-    public SensorAlert findByState(@RequestParam String state) {
+    @GetMapping("/{state}")
+    public SensorAlert findByState(@PathVariable String state) {
         return sensorDataService.findByState(state);
     }
 }

@@ -21,8 +21,9 @@ import java.util.Date;
 public class SensorAlert {
     @Id
     public String id;
-    @Indexed(unique = true)
     public String state;
+    @Indexed(unique = true)
+    public String normalizedState;
     public Double temperature;
     public Double temperatureLimit;
     public Double humidity;

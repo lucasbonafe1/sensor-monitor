@@ -30,9 +30,10 @@ public class SensorDataService {
     public SensorAlert verifyAndSaveAlert(SensorDataDTO dto){
         SensorAlert savedAlert = new SensorAlert();
         savedAlert.state = dto.state;
+        savedAlert.normalizedState = dto.state.toLowerCase().trim();
 
         try {
-            SensorAlert sensorExistent = sensorDataRepository.findFirstByState(dto.state);
+            SensorAlert sensorExistent = sensorDataRepository.findFirstByNormalizedState(savedAlert.normalizedState);
             CurrentDTO temperatureResponse = verifyIfTemperatureIsOverLimit(dto);
 
             if (temperatureResponse != null){
@@ -69,6 +70,7 @@ public class SensorDataService {
     }
 
     public SensorAlert findByState(String state){
-        return sensorDataRepository.findFirstByState(state);
+        String normalizedState = state.toLowerCase().trim();
+        return sensorDataRepository.findFirstByNormalizedState(normalizedState);
     }
 }

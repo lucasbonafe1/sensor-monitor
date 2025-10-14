@@ -1,7 +1,7 @@
 package com.example.sensor_monitor.config;
 
 
-import com.example.sensor_monitor.dtos.SensorDataDTO;
+import com.example.sensor_monitor.dtos.AlertDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,7 @@ public class KafkaProducerConfig {
     private String bootstrapAddress;
 
     @Bean
-    public ProducerFactory<String, SensorDataDTO> orderProducerFactory() {
+    public ProducerFactory<String, AlertDTO> orderProducerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -32,7 +32,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, SensorDataDTO> orderKafkaTemplate() {
+    public KafkaTemplate<String, AlertDTO> orderKafkaTemplate() {
         return new KafkaTemplate<>(orderProducerFactory());
     }
 }

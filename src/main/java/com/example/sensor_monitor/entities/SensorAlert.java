@@ -2,7 +2,6 @@ package com.example.sensor_monitor.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -10,8 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -25,9 +22,14 @@ public class SensorAlert {
     @Indexed(unique = true)
     public String normalizedState;
     public Double temperature;
-    public Double temperatureLimit;
+    public Double maxTemperature;
+    public Double minTemperature;
     public Double humidity;
-    public Double humidityLimit;
+    public Long maxHumidity;
+    public Double preciptation;
+    public Long maxPreciptation;
+    public Double wind;
+    public Double maxWind;
     public String alertDate;
 
     public SensorAlert() {
@@ -40,10 +42,24 @@ public class SensorAlert {
         return sdf.format(date);
     }
 
-    public void setCurrentTemperature(Double currentTemperature, Double currentTemperatureLimit, Double currentHumidity, Double currentHumidityLimit){
+    public void setCurrentTemperature(Double currentTemperature, Double maxTemperature, Double minTemperature){
         this.temperature = currentTemperature;
-        this.temperatureLimit = currentTemperatureLimit;
-        this.humidity = currentHumidity;
-        this.humidityLimit = currentHumidityLimit;
+        this.maxTemperature = maxTemperature;
+        this.minTemperature = minTemperature;
     };
+
+    public void setHumidity(Double humidity, Long maxHumidity){
+        this.humidity = humidity;
+        this.maxHumidity = maxHumidity;
+    }
+
+    public void setPrecipitation(Double preciptation, Long maxPreciptation) {
+        this.preciptation = preciptation;
+        this.maxPreciptation = maxPreciptation;
+    }
+
+    public void setWind(Double wind, Double maxWind) {
+        this.wind = wind;
+        this.maxWind = maxWind;
+    }
 }

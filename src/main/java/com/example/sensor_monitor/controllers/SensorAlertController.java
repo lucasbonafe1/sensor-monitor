@@ -1,10 +1,8 @@
 package com.example.sensor_monitor.controllers;
 
-import com.example.sensor_monitor.dtos.SensorDataDTO;
 import com.example.sensor_monitor.entities.SensorAlert;
 import com.example.sensor_monitor.services.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,8 +14,8 @@ public class SensorAlertController {
     private SensorDataService sensorDataService;
 
     @PostMapping
-    public SensorAlert save(@RequestBody SensorDataDTO user) {
-        return sensorDataService.verifyAndSaveAlert(user);
+    public SensorAlert save(@RequestParam String state, @RequestParam Integer days) {
+        return sensorDataService.verifyAndSaveAlert(state, days);
     }
 
     @GetMapping

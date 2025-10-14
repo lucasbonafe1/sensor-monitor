@@ -1,6 +1,6 @@
 package com.example.sensor_monitor.services;
 
-import com.example.sensor_monitor.dtos.WeatherReturnDTO;
+import com.example.sensor_monitor.dtos.weather.WeatherReturnDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,10 +28,15 @@ public class WeatherApiExternalService {
     @Autowired
     public ObjectMapper mapper;
 
-    public WeatherReturnDTO findByLocation(String location) {
+    public WeatherReturnDTO findForecastByLocation(String location, Integer days) {
+        if (days < 1){
+            days = 1;
+        }
+
         try {
-            String url = baseUrl + "/current.json?q=" + URLEncoder.encode(location, StandardCharsets.UTF_8)
-                            + "&key=" + apiKey;
+            String url = baseUrl + "/forecast.json?q=" + URLEncoder.encode(location, StandardCharsets.UTF_8)
+                    + "&days=" + days
+                    + "&key=" + apiKey;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))

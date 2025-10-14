@@ -1,4 +1,4 @@
-package com.example.sensor_monitor.dtos;
+package com.example.sensor_monitor.dtos.weather;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,9 +14,5 @@ public class CurrentDTO {
     public ConditionDTO condition;
     public Double wind_mph;
     public Double humidity;
-    public Double feelslike_c;
-    public Double vis_km;
-    public Double vis_miles;
-    public Double gust_mph;
-    public Double gust_kph;
+    public Double precip_mm;
 }

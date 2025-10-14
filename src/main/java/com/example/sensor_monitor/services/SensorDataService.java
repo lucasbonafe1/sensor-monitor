@@ -1,20 +1,15 @@
 package com.example.sensor_monitor.services;
 
-import com.example.sensor_monitor.dtos.CurrentDTO;
-import com.example.sensor_monitor.dtos.SensorDataDTO;
-import com.example.sensor_monitor.dtos.WeatherReturnDTO;
+import com.example.sensor_monitor.dtos.AlertDTO;
+import com.example.sensor_monitor.dtos.weather.*;
 import com.example.sensor_monitor.entities.SensorAlert;
+import com.example.sensor_monitor.enums.AlertTypeEnum;
 import com.example.sensor_monitor.repositories.SensorDataRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.Console;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class SensorDataService {
@@ -27,42 +22,81 @@ public class SensorDataService {
     @Autowired
     public KafkaProducerService kafkaProducerService;
 
-    public SensorAlert verifyAndSaveAlert(SensorDataDTO dto){
+    public SensorAlert verifyAndSaveAlert(String state, Integer days){
         SensorAlert savedAlert = new SensorAlert();
-        savedAlert.state = dto.state;
-        savedAlert.normalizedState = dto.state.toLowerCase().trim();
+        savedAlert.state = state;
+        savedAlert.normalizedState = state.toLowerCase().trim();
 
         try {
             SensorAlert sensorExistent = sensorDataRepository.findFirstByNormalizedState(savedAlert.normalizedState);
-            CurrentDTO temperatureResponse = verifyIfTemperatureIsOverLimit(dto);
+            List<AlertDTO> alertDTOS = verifyIfTemperatureIsOverLimit(savedAlert.normalizedState, days);
 
-            if (temperatureResponse != null){
-                savedAlert.setCurrentTemperature(temperatureResponse.temp_c, dto.temperatureLimit,
-                            temperatureResponse.humidity, dto.humidityLimit);
+            for (AlertDTO alert : alertDTOS){
+                savedAlert.setCurrentTemperature(
+                        alert.temperature,
+                        alert.forecastDay.day.maxtempC,
+                        alert.forecastDay.day.mintempC
+                );
+
+                savedAlert.setHumidity(
+                        alert.humidity,
+                        alert.forecastDay.day.avghumidity.longValue()
+                );
+
+                savedAlert.setPrecipitation(
+                        alert.precipitation,
+                        alert.forecastDay.day.totalprecipMm
+                );
+
+                savedAlert.setWind(
+                        alert.wind,
+                        alert.forecastDay.day.maxwindMph
+                );
 
                 if (sensorExistent != null)
                     savedAlert.id = sensorExistent.id;
 
                 sensorDataRepository.save(savedAlert);
-                kafkaProducerService.sendMessageOrder(dto);
+                kafkaProducerService.sendMessageOrder(alert);
+
+                System.out.println("Alerta processado: \n)" + alert);
             }
-            System.out.println("Alerta processado para a localidade: )" + dto.state);
         } catch (Exception e){
-            System.out.println("Erro ao salvar/atualizar alerta para a localidade: " + dto.state +"\n"+ e);
+            System.out.println("Erro ao salvar/atualizar alerta para a localidade: " + state +"\n"+ e);
         }
 
         return savedAlert;
     }
 
-    protected CurrentDTO verifyIfTemperatureIsOverLimit(SensorDataDTO sensorData)
+    protected List<AlertDTO> verifyIfTemperatureIsOverLimit(String state, Integer days)
     {
-        WeatherReturnDTO response = weatherApiExternalService.findByLocation(sensorData.state);
-        CurrentDTO currentTemp = response.current;
+        List<AlertDTO> alertList = new ArrayList<AlertDTO>();
+        WeatherReturnDTO response = weatherApiExternalService.findForecastByLocation(state, days);
 
-        if(currentTemp != null && (currentTemp.temp_c > sensorData.temperatureLimit || currentTemp.humidity > sensorData.humidityLimit))
-            return currentTemp;
+        for (ForecastDayDTO forecast : response.forecast.forecastDay){
+            DayDTO dayData = forecast.day;
 
-        return null;
+            if(dayData != null){
+                CurrentDTO current = response.current;
+                AlertDTO alertDTO = new AlertDTO(state, current.temp_c, current.humidity, current.wind_mph, current.precip_mm, forecast);
+
+                if(current.temp_c > dayData.maxtempC || current.temp_c < dayData.mintempC)
+                    alertDTO.alertType = AlertTypeEnum.TEMPERATURE;
+
+                if(current.wind_mph > dayData.maxwindMph)
+                    alertDTO.alertType = AlertTypeEnum.WIND;
+
+                if(current.humidity > dayData.avghumidity)
+                    alertDTO.alertType = AlertTypeEnum.HUMIDITY;
+
+                if(current.precip_mm > dayData.totalprecipMm)
+                    alertDTO.alertType = AlertTypeEnum.HUMIDITY;
+
+                alertList.add(alertDTO);
+            }
+        }
+        
+        return alertList;
     }
 
     public List<SensorAlert> findAll(){

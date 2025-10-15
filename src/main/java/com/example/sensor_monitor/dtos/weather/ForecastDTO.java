@@ -12,5 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ForecastDTO {
-    public List<ForecastDayDTO> forecastDay;
+    public List<ForecastDayDTO> forecastday;
 }

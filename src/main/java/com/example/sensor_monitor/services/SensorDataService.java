@@ -24,7 +24,6 @@ public class SensorDataService {
 
     public SensorAlert verifyAndSaveAlert(String state, Integer days){
         SensorAlert savedAlert = new SensorAlert();
-        savedAlert.state = state;
         savedAlert.normalizedState = state.toLowerCase().trim();
 
         try {
@@ -32,6 +31,8 @@ public class SensorDataService {
             List<AlertDTO> alertDTOS = verifyIfTemperatureIsOverLimit(savedAlert.normalizedState, days);
 
             for (AlertDTO alert : alertDTOS){
+                savedAlert.setState(alert.state);
+
                 savedAlert.setCurrentTemperature(
                         alert.temperature,
                         alert.forecastDay.day.maxtempC,
@@ -73,23 +74,23 @@ public class SensorDataService {
         List<AlertDTO> alertList = new ArrayList<AlertDTO>();
         WeatherReturnDTO response = weatherApiExternalService.findForecastByLocation(state, days);
 
-        for (ForecastDayDTO forecast : response.forecast.forecastDay){
+        for (ForecastDayDTO forecast : response.forecast.forecastday){
             DayDTO dayData = forecast.day;
 
             if(dayData != null){
                 CurrentDTO current = response.current;
-                AlertDTO alertDTO = new AlertDTO(state, current.temp_c, current.humidity, current.wind_mph, current.precip_mm, forecast);
+                AlertDTO alertDTO = new AlertDTO(response.location.name, current.temp_c, current.humidity, current.wind_mph, current.precip_mm, forecast);
 
-                if(current.temp_c > dayData.maxtempC || current.temp_c < dayData.mintempC)
+                if((dayData.maxtempC != null && current.temp_c > dayData.maxtempC) || (dayData.mintempC != null && current.temp_c < dayData.mintempC))
                     alertDTO.alertType = AlertTypeEnum.TEMPERATURE;
 
-                if(current.wind_mph > dayData.maxwindMph)
+                if(dayData.maxwindMph != null && current.wind_mph > dayData.maxwindMph)
                     alertDTO.alertType = AlertTypeEnum.WIND;
 
-                if(current.humidity > dayData.avghumidity)
+                if(dayData.avghumidity != null && current.humidity > dayData.avghumidity)
                     alertDTO.alertType = AlertTypeEnum.HUMIDITY;
 
-                if(current.precip_mm > dayData.totalprecipMm)
+                if(dayData.totalprecipMm != null && current.precip_mm > dayData.totalprecipMm)
                     alertDTO.alertType = AlertTypeEnum.HUMIDITY;
 
                 alertList.add(alertDTO);

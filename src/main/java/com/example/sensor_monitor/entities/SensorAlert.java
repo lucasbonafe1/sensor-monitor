@@ -12,7 +12,6 @@ import java.time.Instant;
 import java.util.Date;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @Document(collection = "sensorAlert")
 public class SensorAlert {
@@ -61,5 +60,9 @@ public class SensorAlert {
     public void setWind(Double wind, Double maxWind) {
         this.wind = wind;
         this.maxWind = maxWind;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 }

@@ -47,7 +47,7 @@ public class WeatherApiExternalService {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 404)
-                throw new NoSuchElementException("Local não encontrado.");
+                throw new NoSuchElementException("Localidade não encontrada.");
 
             WeatherReturnDTO dtoMapped = mapper.readValue(response.body(), WeatherReturnDTO.class);
 
